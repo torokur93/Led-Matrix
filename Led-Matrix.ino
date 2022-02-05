@@ -1,4 +1,4 @@
-
+#include "src/Buffer.h"
 
 uint64_t row1[128];
 uint64_t temp;
@@ -21,14 +21,19 @@ uint8_t i;
 int pixel=0;
 int color = 1;
 
-const int rows = 8;
-const int cols = 32;
+char rows = 8;
+//const char c_cols = 32;
 
-int DisplayBuffer [rows/2][cols*2];
+char cols = 32;
 
-//Buffer DisplayBuffer(rows/2,cols*2);
+//int DisplayBuffer [rows/2][cols*2];
 
-const int LookUpTable [2][cols] = 
+Buffer DisplayBuffer(rows/2,cols*2);
+
+//Array2D LookUpTable(2,cols);
+
+
+char LookUpTable [2][32] = 
   {
     {48,49,50,51,52,53,54,55,32,33,34,35,36,37,38,39,16,17,18,19,20,21,22,23,0,1,2,3,4,5,6,7},
     {63,62,61,60,59,58,57,56,47,46,45,44,43,42,41,40,31,30,29,28,27,26,25,24,15,14,13,12,11,10,9,8}
@@ -60,19 +65,7 @@ void setup() {
   row=0;
   temp =  1;  
   
-  //------------------------Paste here:
-  row1[0]=0x0000000000000000FFC0FF00FF00FF3B;
-  row1[1]=0X0000000000000000FFDFFFFFFFFFFFFB;
-  row1[2]=0x00000000000000000CDF00FF00FFC0FB;
-  row1[3]=0x00000000000000000CCF00000000B13B;
-  row1[4]=0x00000000000000007CC000000000B31B;
-  row1[5]=0x00000000000000003CC000000000B303;
-  row1[6]=0x00000000000000001CFF00FF00FFB3FF;
-  row1[7]=0x00000000000000000CFF00FF00FFB3FF;
-  //----------------------------up to here
-
-
-  ClearBuffer();
+  DisplayBuffer.ClearData();
 
   
   Serial.begin(9600);
@@ -101,43 +94,33 @@ void loop() {
   //UpdateDisplay();
   //UpdateSerial();
   
-  ClearBuffer();
+  DisplayBuffer.ClearData();
 
 }
 
+void SetPixel(char x, char y,char value){
 
-void ClearBuffer(){
-  for(int i=0;i<rows/2;i++){
-    for(int j=0;j<cols*2;j++){
-      DisplayBuffer[i][j]=0;
-    }
-  }
-}
+  char BufferX = (x & B011);
+  char BufferY = LookUpTable[(x & B100)>>2][y];
 
-void SetPixel(int x, int y,int value){
-
-  int BufferX = (x & B011);
-  int BufferY = LookUpTable[(x & B100)>>2][y];
-
-  int ValueFilter;
+  char ValueFilter;
 
   if(x & B1000){
     ValueFilter = B111000;
   }else{
     ValueFilter = B000111;
   }
-
-  DisplayBuffer[BufferX][BufferY] &= ~(ValueFilter);
-  DisplayBuffer[BufferX][BufferY] |= (value & ValueFilter);
+  DisplayBuffer.ClearBits(BufferX,BufferY,ValueFilter);
+  DisplayBuffer.SetBits(BufferX,BufferY,value & ValueFilter);
 
 }
 
 void UpdateDisplay(){
   
-  for(int i=0;i<rows/2;i++){
-    for(int j=0;j<cols*2;j++){
+  for(char i=0;i<rows/2;i++){
+    for(char j=0;j<cols*2;j++){
 
-      int CurrentPixel = DisplayBuffer[i][j];
+      char CurrentPixel = DisplayBuffer.GetData(i,j);
     
       // Lower Half
       digitalWrite(B1P, CurrentPixel & B00000001);
@@ -181,7 +164,7 @@ void UpdateSerial(){
     
     for(int j=0;j<cols*2;j++){
 
-      Serial.print(DisplayBuffer[i][j]);
+      Serial.print(DisplayBuffer.GetData(i,j));
       Serial.print(';');
     }
 
