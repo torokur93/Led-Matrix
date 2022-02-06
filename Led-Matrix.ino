@@ -116,9 +116,9 @@ char TransformY(char x, char y){
   char BitID = y % 8;
 
   if(x){
-    return COLS - 1 - y - SegmentID * 8;
+    return (COLS*2) - 1 - y - SegmentID * 8;
   }else{
-    return COLS - 16 -SegmentID * 16 + BitID;
+    return (COLS*2) - 16 -SegmentID * 16 + BitID;
   }
 
 }
@@ -128,8 +128,8 @@ void UpdateDisplay(){
   
   
 
-  for(char row=0;row<DisplayBuffer.Rows/2;row++){
-    for(char col=0;col<DisplayBuffer.Cols*2;col++){
+  for(char row=0;row<DisplayBuffer.Rows;row++){
+    for(char col=0;col<DisplayBuffer.Cols;col++){
 
       char CurrentPixel = DisplayBuffer.GetData(row,col);
     
