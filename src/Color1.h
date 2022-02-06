@@ -12,15 +12,15 @@ class Color1
     private:
     public:
         char colorData = 0;
-        Color3();
-        Color3(char r, char g, char b);
+        Color1();
+        Color1(char r, char g, char b);
         char GetR();
         char GetG();
         char GetB();
         void SetR(char value);
         void SetG(char value);
         void SetB(char value);
-        ~Color3();
+        ~Color1();
 };
 
 #endif

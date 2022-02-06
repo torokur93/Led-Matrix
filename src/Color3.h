@@ -1,9 +1,11 @@
 #ifndef COLOR3_H
 #define COLOR3_H
 
-#define R_Mask 0x30
-#define G_Mask 0x0C
-#define B_Mask 0x03
+#define R_Mask 0x30 // B0011 0000   >>4 48
+#define G_Mask 0x0C // B0000 1100   >>2 12
+#define B_Mask 0x03 // B0000 0011   >>0 3
+
+#define ColorBits 2
 
 class Color3
 {
