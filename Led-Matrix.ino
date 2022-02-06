@@ -28,6 +28,8 @@ uint8_t i;
 int pixel=0;
 int color = 1;
 
+char currentFrame = 0;
+
 Buffer DisplayBuffer(ROWS/4,COLS*2);
 
 void setup() {
@@ -44,12 +46,14 @@ void setup() {
 }
 
 void loop() {
-
+/*
   color=1;
   for(char row = 0; row<ROWS; row++){
     for(char col = 0; col<COLS; col++){
+      Color1 tmp(color & B001, (color & B010)>>1, (color & B100)>>2);
+      //Color1 tmp(1, 1, 1);
 
-      SetPixel(row,col,color);
+      SetPixel(row,col,tmp);
       UpdateDisplay();
       
     }
@@ -61,10 +65,27 @@ void loop() {
       color++;
     }
   }
-  //UpdateDisplay();
+*/
+
+  /*SetPixel(0,0,Color1(1,0,0));
+  SetPixel(1,0,Color1(1,1,0));
+  SetPixel(0,4,Color1(1,1,0));
+  SetPixel(4,0,Color1(0,1,0));
+  SetPixel(4,4,Color1(0,1,1));*/
+
+  for (char currentFrame = 1; currentFrame < 150; currentFrame++)
+  {
+
+    DrawCircle(7,8,currentFrame/10,Color1(0,1,1));
+    DrawCircle(7,24,currentFrame/10,Color1(0,1,0),Color1(1,0,0));
+    DrawSquare(5,22,currentFrame/30,Color1(1,1,0));
+    UpdateDisplay();
+    DisplayBuffer.ClearData();
+  }
+  
+
   //UpdateSerial();
   
-  DisplayBuffer.ClearData();
 
 }
 
@@ -93,24 +114,26 @@ void InitalizePins(){
 }
 
 
-void SetPixel(char x, char y,char value){
+void SetPixel(char x, char y,Color1 value){
 
   char BufferX = (x & B011);
   
   char BufferY = TransformY((x & B100)>>2,y);
 
-  char ValueFilter;
+  //char ValueFilter;
 
   if(x & B1000){
-    ValueFilter = B111000;
-    value <<= 3;
+    /*ValueFilter = B111000;
+    value <<= 3;*/
+    DisplayBuffer.SetUpperData(BufferX, BufferY, value);
   }else{
-    ValueFilter = B000111;
+    //ValueFilter = B000111;
+    DisplayBuffer.SetLowerData(BufferX, BufferY, value);
   }
-
+/*
   DisplayBuffer.ClearBits(BufferX,BufferY,ValueFilter);
   DisplayBuffer.SetBits(BufferX,BufferY,value & ValueFilter);
-
+*/
 }
 
 char TransformY(char x, char y){
@@ -133,8 +156,8 @@ void UpdateDisplay(){
   for(char row=0;row<DisplayBuffer.Rows;row++){
     for(char col=0;col<DisplayBuffer.Cols;col++){
 
-      char CurrentPixel = DisplayBuffer.GetData(row,col);
-    
+      ColorDouble CurrentPixel = DisplayBuffer.GetData(row,col);
+      /*
       // Lower Half
       digitalWrite(B1P, CurrentPixel & B00000001);
       digitalWrite(G1P, (CurrentPixel>>1) & B00000001);
@@ -143,6 +166,17 @@ void UpdateDisplay(){
       digitalWrite(B2P, (CurrentPixel>>3) & B00000001);
       digitalWrite(G2P, (CurrentPixel>>4) & B00000001);
       digitalWrite(R2P, (CurrentPixel>>5) & B00000001);
+      */
+
+      // Lower Half
+      digitalWrite(B1P, CurrentPixel.LowerColor.GetB());
+      digitalWrite(G1P, CurrentPixel.LowerColor.GetG());
+      digitalWrite(R1P, CurrentPixel.LowerColor.GetR());
+      // Higher Half
+      digitalWrite(B2P, CurrentPixel.UpperColor.GetB());
+      digitalWrite(G2P, CurrentPixel.UpperColor.GetG());
+      digitalWrite(R2P, CurrentPixel.UpperColor.GetR());
+
 
       // Shift to register
       digitalWrite(ClkP, HIGH);
@@ -168,8 +202,7 @@ void UpdateDisplay(){
   
 }
 
-
-void UpdateSerial(){
+/*void UpdateSerial(){
 
   Serial.println("Start");
   
@@ -183,5 +216,53 @@ void UpdateSerial(){
 
     Serial.println();
   }
+}
+*/
+
+void DrawSquare(char x, char y, char size, Color1 color){
+  for (char row = 0; row < size; row++)
+  {
+    for (char col = 0; col < size; col++)
+    {
+      SetPixel(x+row,y+col,color);
+    }
+    
+  }
   
+}
+
+void DrawCircle(char x, char y, char size, Color1 color){
+  /*for (char row = 0; row < size; row++)
+  {
+    for (char col = 0; col < size; col++)
+    {
+      double distance = sqrt(pow(row-(size/2),2) + pow(col-(size/2),2));
+
+      if(distance<=size/2){
+        SetPixel(x-(size/2)+row,y-(size/2)+col,color);
+      }else{
+        SetPixel(x-(size/2)+row,y-(size/2)+col,Color1(1,0,0));
+      }
+    }
+    
+  }*/
+
+  DrawCircle(x,y,size,color,Color1(0,0,0));
+}
+
+void DrawCircle(char x, char y, char size, Color1 frontColor, Color1 backColor){
+  for (char row = 0; row < size; row++)
+  {
+    for (char col = 0; col < size; col++)
+    {
+      double distance = sqrt(pow(row-(size/2),2) + pow(col-(size/2),2));
+
+      if(distance<=size/2){
+        SetPixel(x-(size/2)+row,y-(size/2)+col,frontColor);
+      }else{
+        SetPixel(x-(size/2)+row,y-(size/2)+col,backColor);
+      }
+    }
+    
+  }
 }

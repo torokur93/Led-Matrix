@@ -1,7 +1,7 @@
 #ifndef BUFFER_H
 #define BUFFER_H
 
-//#include "Array2D.h"
+#include "ColorDouble.h"
 
 class Buffer
 {
@@ -12,17 +12,25 @@ class Buffer
         char Rows;
         char Cols;
         //Array2D data;
-        char *data;
+        ColorDouble *data;
 
         Buffer(char rows, char cols);
 
         void ClearData();
 
-        void SetData(char value);
+        void SetData(ColorDouble value);
 
-        void SetData(char x, char y, char value);
+        void SetData(char x, char y, ColorDouble value);
 
-        char GetData(char x, char y);
+        ColorDouble GetData(char x, char y);
+
+        void SetLowerData(char x, char y, Color1 value);
+
+        void SetUpperData(char x, char y, Color1 value);
+
+        Color1 GetLowerData(char x, char y);
+
+        Color1 GetUpperData(char x, char y);
 
         void SetBits(char x, char y, char bits);
 
