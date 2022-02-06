@@ -34,7 +34,7 @@ void setup() {
   InitalizePins();
 
   row=0;
-  temp =  1;  
+  temp = 1;  
   
   DisplayBuffer.ClearData();
 
@@ -45,10 +45,10 @@ void setup() {
 void loop() {
 
   color=1;
-  for(int i = 0; i<ROWS; i++){
-    for(int j = 0; j<COLS; j++){
+  for(char row = 0; row<ROWS; row++){
+    for(char col = 0; col<COLS; col++){
 
-      SetPixel(i,j,color | (color<<3));
+      SetPixel(row,col,color | (color<<3));
       UpdateDisplay();
       
     }
@@ -128,10 +128,10 @@ void UpdateDisplay(){
   
   
 
-  for(char i=0;i<DisplayBuffer.Rows/2;i++){
-    for(char j=0;j<DisplayBuffer.Cols*2;j++){
+  for(char row=0;row<DisplayBuffer.Rows/2;row++){
+    for(char col=0;col<DisplayBuffer.Cols*2;col++){
 
-      char CurrentPixel = DisplayBuffer.GetData(i,j);
+      char CurrentPixel = DisplayBuffer.GetData(row,col);
     
       // Lower Half
       digitalWrite(B1P, CurrentPixel & B00000001);
@@ -151,13 +151,13 @@ void UpdateDisplay(){
     digitalWrite(OEP, HIGH);
     digitalWrite(LP, HIGH);  
     
-    if(i==0){digitalWrite(AP, LOW);}else{digitalWrite(AP, HIGH);}
+    if(row==0){digitalWrite(AP, LOW);}else{digitalWrite(AP, HIGH);}
     
-    if(i==1){digitalWrite(BP, LOW);}else{digitalWrite(BP, HIGH);}
+    if(row==1){digitalWrite(BP, LOW);}else{digitalWrite(BP, HIGH);}
     
-    if(i==2){digitalWrite(CP, LOW);}else{digitalWrite(CP, HIGH);}
+    if(row==2){digitalWrite(CP, LOW);}else{digitalWrite(CP, HIGH);}
     
-    if(i==3){digitalWrite(DP, LOW);}else{digitalWrite(DP, HIGH);}
+    if(row==3){digitalWrite(DP, LOW);}else{digitalWrite(DP, HIGH);}
   
     // Enable Display
     digitalWrite(OEP, LOW);
@@ -171,11 +171,11 @@ void UpdateSerial(){
 
   Serial.println("Start");
   
-  for(int i=0;i<DisplayBuffer.Rows;i++){
+  for(char row=0;row<DisplayBuffer.Rows;row++){
     
-    for(int j=0;j<DisplayBuffer.Cols;j++){
+    for(char col=0;col<DisplayBuffer.Cols;col++){
 
-      Serial.print(DisplayBuffer.GetData(i,j));
+      Serial.print(DisplayBuffer.GetData(row,col));
       Serial.print(';');
     }
 
