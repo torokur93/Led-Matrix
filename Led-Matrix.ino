@@ -1,69 +1,51 @@
 #include "src/Buffer.h"
 
-#define ROWS 8
+#define ROWS 16
 #define COLS 32
-
-uint64_t row1[128];
-uint64_t temp;
 
 // Pin definitions
 
-int LP = 10;            // Latch Pin
-int ClkP = 8;         // Clock Pin
-int R1P = 2;          // R1 Pin
-int B1P = 4;          // B1 Pin
-int G1P = 3;           // G1 Pin
-int R2P = 5;           // R2 Pin
-int B2P = 7;           // B2 Pin
-int G2P = 6;           // G2 Pin
-int AP = A0;            // A Pin
-int BP = A1;            // B Pin
-int CP = A2;            // C Pin
-int DP = A3;            // D Pin
-int OEP = 9;          // OE Pin
+#define LP    10           // Latch Pin
+#define ClkP  8        // Clock Pin
+#define R1P   2         // R1 Pin
+#define B1P   4         // B1 Pin
+#define G1P   3          // G1 Pin
+#define R2P   5          // R2 Pin
+#define B2P   7          // B2 Pin
+#define G2P   6          // G2 Pin
+#define AP    A0           // A Pin
+#define BP    A1           // B Pin
+#define CP    A2           // C Pin
+#define DP    A3           // D Pin
+#define OEP   9         // OE Pin
 
 // Variable definitions
 
+uint64_t temp;
 int row = 0;
 uint8_t i;
 int pixel=0;
 int color = 1;
 
-//char rows = 8;
-//const char c_cols = 32;
-
-//char cols = 32;
-
-//int DisplayBuffer [rows/2][cols*2];
-
-Buffer DisplayBuffer(ROWS/2,COLS*2);
-
-//Array2D LookUpTable(2,cols);
-
-/*char LookUpTable [2][32] = 
-  {
-    {48,49,50,51,52,53,54,55,32,33,34,35,36,37,38,39,16,17,18,19,20,21,22,23,0,1,2,3,4,5,6,7},
-    {63,62,61,60,59,58,57,56,47,46,45,44,43,42,41,40,31,30,29,28,27,26,25,24,15,14,13,12,11,10,9,8}
-  };
-*/
+Buffer DisplayBuffer(ROWS/4,COLS*2);
 
 void setup() {
-  //set pins to output so you can control the shift register
+  
   InitalizePins();
+
   row=0;
   temp =  1;  
   
   DisplayBuffer.ClearData();
 
-  
   Serial.begin(9600);
-  
+
 }
 
 void loop() {
 
   color=1;
-  for(int i = 0; i<ROWS*2; i++){
+  for(int i = 0; i<ROWS; i++){
     for(int j = 0; j<COLS; j++){
 
       SetPixel(i,j,color | (color<<3));
@@ -113,7 +95,7 @@ void InitalizePins(){
 void SetPixel(char x, char y,char value){
 
   char BufferX = (x & B011);
-  //char BufferY = LookUpTable[(x & B100)>>2][y];
+  
   char BufferY = TransformY((x & B100)>>2,y);
 
   char ValueFilter;
@@ -123,6 +105,7 @@ void SetPixel(char x, char y,char value){
   }else{
     ValueFilter = B000111;
   }
+
   DisplayBuffer.ClearBits(BufferX,BufferY,ValueFilter);
   DisplayBuffer.SetBits(BufferX,BufferY,value & ValueFilter);
 
@@ -143,8 +126,10 @@ char TransformY(char x, char y){
 
 void UpdateDisplay(){
   
-  for(char i=0;i<ROWS/2;i++){
-    for(char j=0;j<COLS*2;j++){
+  
+
+  for(char i=0;i<DisplayBuffer.Rows/2;i++){
+    for(char j=0;j<DisplayBuffer.Cols*2;j++){
 
       char CurrentPixel = DisplayBuffer.GetData(i,j);
     
@@ -186,9 +171,9 @@ void UpdateSerial(){
 
   Serial.println("Start");
   
-  for(int i=0;i<ROWS/2;i++){
+  for(int i=0;i<DisplayBuffer.Rows;i++){
     
-    for(int j=0;j<COLS*2;j++){
+    for(int j=0;j<DisplayBuffer.Cols;j++){
 
       Serial.print(DisplayBuffer.GetData(i,j));
       Serial.print(';');
