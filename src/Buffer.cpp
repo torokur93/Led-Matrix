@@ -5,7 +5,9 @@ Buffer::Buffer(char rows, char cols)
 {
     Rows = rows;
     Cols = cols;
-    data = new Array2D(rows, cols);
+    //data = new Array2D(rows, cols);
+    data = new char[rows*cols];
+
     ClearData();
 }
 // Destructor
@@ -13,43 +15,43 @@ Buffer::~Buffer(){
 
 }
 
-Buffer::ClearData(){
+void Buffer::ClearData(){
     SetData(0);
 }
 
-Buffer::SetData(char value){
+void Buffer::SetData(char value){
     
     for (char row = 0; row < Rows; row++)
     {
         for (char col = 0; col < Cols; col++)
         {
-            data[row][col] = value;
+            data[(row * Cols) + col] = value;
         }
     }
 }
 
-Buffer::SetData(char x, char y, char value){
+void Buffer::SetData(char x, char y, char value){
     if(x<=Rows && y<=Cols){
-        data[x][y]=value;
+        data[(x * Cols) + y]=value;
     }
 
 }
 
-Buffer::GetData(char x, char y){
+char Buffer::GetData(char x, char y){
     if(x<=Rows && y<=Cols){
-        return data[x][y];
+        return data[(x * Cols) + y];
     }
 
     return 0;
 
 }
 
-Buffer::SetBits(char x, char y, char bits){
-    data[x][y] |= bits;
+void Buffer::SetBits(char x, char y, char bits){
+    data[(x * Cols) + y] |= bits;
 }
-Buffer::ClearBits(char x, char y, char bits){
-    data[x][y] &= ~bits;
+void Buffer::ClearBits(char x, char y, char bits){
+    data[(x * Cols) + y] &= ~bits;
 }
-Buffer::SetBits(char x, char y, char bits){
-    data[x][y] ^= bits;
+void Buffer::ToggleBits(char x, char y, char bits){
+    data[(x * Cols) + y] ^= bits;
 }

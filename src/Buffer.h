@@ -1,7 +1,7 @@
 #ifndef BUFFER_H
 #define BUFFER_H
 
-#include "Array2D.h"
+//#include "Array2D.h"
 
 class Buffer
 {
@@ -11,7 +11,8 @@ class Buffer
     public:
         char Rows;
         char Cols;
-        Array2D data;
+        //Array2D data;
+        char *data;
 
         Buffer(char rows, char cols);
 
