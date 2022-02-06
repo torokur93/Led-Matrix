@@ -1,7 +1,8 @@
 #include "src/Buffer.h"
 
-#define ROWS 16
-#define COLS 32
+#define ROWS  16
+#define COLS  32
+#define FPS   1
 
 // Pin definitions
 
@@ -48,7 +49,7 @@ void loop() {
   for(char row = 0; row<ROWS; row++){
     for(char col = 0; col<COLS; col++){
 
-      SetPixel(row,col,color | (color<<3));
+      SetPixel(row,col,color);
       UpdateDisplay();
       
     }
@@ -102,6 +103,7 @@ void SetPixel(char x, char y,char value){
 
   if(x & B1000){
     ValueFilter = B111000;
+    value <<= 3;
   }else{
     ValueFilter = B000111;
   }
