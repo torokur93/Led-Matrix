@@ -20,24 +20,34 @@
 #define DP    A3           // D Pin
 #define OEP   9         // OE Pin
 
+// Constants
+
+const int numbers[10] = {
+  075557,
+  011111,
+  071747,
+  071717,
+  055711,
+  074717,
+  074757,
+  071111,
+  075757,
+  075717
+};
+
 // Variable definitions
 
-uint64_t temp;
-int row = 0;
-uint8_t i;
-int pixel=0;
-int color = 1;
+char currentRow = 0;
 
-char currentFrame = 0;
+int counter=0;
+char increment = -16;
 
 Buffer DisplayBuffer(ROWS/4,COLS*2);
 
 void setup() {
   
   InitalizePins();
-
-  row=0;
-  temp = 1;  
+  SetupInterrupt();
   
   DisplayBuffer.ClearData();
 
@@ -46,47 +56,28 @@ void setup() {
 }
 
 void loop() {
-/*
-  color=1;
-  for(char row = 0; row<ROWS; row++){
-    for(char col = 0; col<COLS; col++){
-      Color1 tmp(color & B001, (color & B010)>>1, (color & B100)>>2);
-      //Color1 tmp(1, 1, 1);
 
-      SetPixel(row,col,tmp);
-      UpdateDisplay();
-      
+    Color1 pb_bck(0,1,0);
+
+    if(counter>5000){
+      if (counter>6500)
+      {
+        pb_bck = Color1(1,0,0);
+      }else{
+        pb_bck = Color1(1,1,0);
+      }
     }
+
+    DrawProgressBar(1,1,14,24,pb_bck,Color1(0,0,0),(float)counter/7200,1);
     
-    if(color == 7)
-    {
-      color=1;
-    }else{
-      color++;
+    DrawNumber(14,26,counter,Color1(0,0,1),1);
+
+    if(counter == 7200 || counter == 0){
+      increment = -increment;
     }
-  }
-*/
-
-  /*SetPixel(0,0,Color1(1,0,0));
-  SetPixel(1,0,Color1(1,1,0));
-  SetPixel(0,4,Color1(1,1,0));
-  SetPixel(4,0,Color1(0,1,0));
-  SetPixel(4,4,Color1(0,1,1));*/
-
-  for (char currentFrame = 1; currentFrame < 150; currentFrame++)
-  {
-
-    DrawCircle(7,8,currentFrame/10,Color1(0,1,1));
-    DrawCircle(7,24,currentFrame/10,Color1(0,1,0),Color1(1,0,0));
-    DrawSquare(5,22,currentFrame/30,Color1(1,1,0));
-    UpdateDisplay();
-    DisplayBuffer.ClearData();
-  }
-  
-
   //UpdateSerial();
   
-
+  counter += increment;
 }
 
 void InitalizePins(){
@@ -113,27 +104,18 @@ void InitalizePins(){
   digitalWrite(OEP, LOW);
 }
 
-
 void SetPixel(char x, char y,Color1 value){
 
   char BufferX = (x & B011);
   
   char BufferY = TransformY((x & B100)>>2,y);
 
-  //char ValueFilter;
-
   if(x & B1000){
-    /*ValueFilter = B111000;
-    value <<= 3;*/
     DisplayBuffer.SetUpperData(BufferX, BufferY, value);
   }else{
-    //ValueFilter = B000111;
     DisplayBuffer.SetLowerData(BufferX, BufferY, value);
   }
-/*
-  DisplayBuffer.ClearBits(BufferX,BufferY,ValueFilter);
-  DisplayBuffer.SetBits(BufferX,BufferY,value & ValueFilter);
-*/
+
 }
 
 char TransformY(char x, char y){
@@ -151,54 +133,46 @@ char TransformY(char x, char y){
 
 void UpdateDisplay(){
   
-  
+  for(char col=0;col<DisplayBuffer.Cols;col++){
 
-  for(char row=0;row<DisplayBuffer.Rows;row++){
-    for(char col=0;col<DisplayBuffer.Cols;col++){
+    ColorDouble CurrentPixel = DisplayBuffer.GetData(currentRow,col);
 
-      ColorDouble CurrentPixel = DisplayBuffer.GetData(row,col);
-      /*
-      // Lower Half
-      digitalWrite(B1P, CurrentPixel & B00000001);
-      digitalWrite(G1P, (CurrentPixel>>1) & B00000001);
-      digitalWrite(R1P, (CurrentPixel>>2) & B00000001);
-      // Higher Half
-      digitalWrite(B2P, (CurrentPixel>>3) & B00000001);
-      digitalWrite(G2P, (CurrentPixel>>4) & B00000001);
-      digitalWrite(R2P, (CurrentPixel>>5) & B00000001);
-      */
-
-      // Lower Half
-      digitalWrite(B1P, CurrentPixel.LowerColor.GetB());
-      digitalWrite(G1P, CurrentPixel.LowerColor.GetG());
-      digitalWrite(R1P, CurrentPixel.LowerColor.GetR());
-      // Higher Half
-      digitalWrite(B2P, CurrentPixel.UpperColor.GetB());
-      digitalWrite(G2P, CurrentPixel.UpperColor.GetG());
-      digitalWrite(R2P, CurrentPixel.UpperColor.GetR());
+    // Lower Half
+    digitalWrite(B1P, CurrentPixel.LowerColor.GetB());
+    digitalWrite(G1P, CurrentPixel.LowerColor.GetG());
+    digitalWrite(R1P, CurrentPixel.LowerColor.GetR());
+    // Higher Half
+    digitalWrite(B2P, CurrentPixel.UpperColor.GetB());
+    digitalWrite(G2P, CurrentPixel.UpperColor.GetG());
+    digitalWrite(R2P, CurrentPixel.UpperColor.GetR());
 
 
-      // Shift to register
-      digitalWrite(ClkP, HIGH);
-      digitalWrite(ClkP, LOW);
-    }
+    // Shift to register
+    digitalWrite(ClkP, HIGH);
+    digitalWrite(ClkP, LOW);
+  }
   
     // Disable display
     digitalWrite(OEP, HIGH);
     digitalWrite(LP, HIGH);  
     
-    if(row==0){digitalWrite(AP, LOW);}else{digitalWrite(AP, HIGH);}
+    if(currentRow==0){digitalWrite(AP, LOW);}else{digitalWrite(AP, HIGH);}
     
-    if(row==1){digitalWrite(BP, LOW);}else{digitalWrite(BP, HIGH);}
+    if(currentRow==1){digitalWrite(BP, LOW);}else{digitalWrite(BP, HIGH);}
     
-    if(row==2){digitalWrite(CP, LOW);}else{digitalWrite(CP, HIGH);}
+    if(currentRow==2){digitalWrite(CP, LOW);}else{digitalWrite(CP, HIGH);}
     
-    if(row==3){digitalWrite(DP, LOW);}else{digitalWrite(DP, HIGH);}
+    if(currentRow==3){digitalWrite(DP, LOW);}else{digitalWrite(DP, HIGH);}
   
     // Enable Display
     digitalWrite(OEP, LOW);
     digitalWrite(LP, LOW);  
-  }
+
+    if(currentRow<DisplayBuffer.Rows){
+      currentRow++;
+    }else{
+      currentRow=0;
+    }
   
 }
 
@@ -228,25 +202,20 @@ void DrawSquare(char x, char y, char size, Color1 color){
     }
     
   }
-  
+}
+
+void DrawRect(char x, char y, char height, char width, Color1 color){
+  for (char row = 0; row < height; row++)
+  {
+    for (char col = 0; col < width; col++)
+    {
+      SetPixel(x+row,y+col,color);
+    }
+    
+  }
 }
 
 void DrawCircle(char x, char y, char size, Color1 color){
-  /*for (char row = 0; row < size; row++)
-  {
-    for (char col = 0; col < size; col++)
-    {
-      double distance = sqrt(pow(row-(size/2),2) + pow(col-(size/2),2));
-
-      if(distance<=size/2){
-        SetPixel(x-(size/2)+row,y-(size/2)+col,color);
-      }else{
-        SetPixel(x-(size/2)+row,y-(size/2)+col,Color1(1,0,0));
-      }
-    }
-    
-  }*/
-
   DrawCircle(x,y,size,color,Color1(0,0,0));
 }
 
@@ -265,4 +234,91 @@ void DrawCircle(char x, char y, char size, Color1 frontColor, Color1 backColor){
     }
     
   }
+}
+
+void DrawDigit(char x, char y, char digit, Color1 color, bool orientation){
+
+  int digitData = numbers[digit%10];
+
+  char x_Trans =0;
+  char y_Trans =0;
+
+  for (char row = 0; row < 5; row++)
+  {
+    for (char col = 0; col < 3; col++)
+    {
+
+      if(orientation){
+        x_Trans = x-col;
+        y_Trans = y+row;
+      }else{
+        x_Trans = x+row;
+        y_Trans = y+col;
+      }
+
+      if(digitData>>(((row+1)*3)-1-col)&1){
+        SetPixel(x_Trans,y_Trans,color);
+      }else{
+        SetPixel(x_Trans,y_Trans,Color1(0,0,0));
+      }
+    }
+    
+  }
+}
+
+void DrawNumber(char x, char y, int number, Color1 color, bool orientation){
+  
+  char x_Trans = x;
+  char y_Trans = y;
+
+  number %= 10000;
+
+  for (char digit = 0; digit < 4; digit++)
+  {
+    if (orientation)
+    {
+      x_Trans = x + (digit * 4);
+    }else{
+      y_Trans = y + (digit * 4);
+    }
+    DrawDigit(x_Trans,y_Trans,(number/(int)pow(10,3-digit))%10,Color1(0,0,1),orientation);
+  }
+}
+
+void DrawProgressBar(char x, char y,char height, char width, Color1 barColor, Color1 bgColor, float progress, bool orientation){
+  
+  if(orientation){
+    DrawRect(x,y,height,(char)(width*progress),barColor);
+    DrawRect(x,y+(char)(width*progress),height,width-(char)(width*progress),bgColor);
+  }else{
+    DrawRect(x,y,(char)(height*progress),width,barColor);
+    DrawRect(x+(char)(height*progress),y,height-(char)(width*progress),width,bgColor);
+  }
+
+}
+
+
+// intterrupts
+void SetupInterrupt(){
+  cli();
+  
+  //set timer1 interrupt at 1Hz
+  TCCR1A = 0;// set entire TCCR1A register to 0
+  TCCR1B = 0;// same for TCCR1B
+  TCNT1  = 0;//initialize counter value to 0
+  // set compare match register for 1hz increments
+  OCR1A = 40;// = (16*10^6) / (1*1024) - 1 (must be <65536)
+  // turn on CTC mode
+  TCCR1B |= (1 << WGM12);
+  // Set CS10 and CS12 bits for 1024 prescaler
+  TCCR1B |= (1 << CS12) | (1 << CS10);  
+  // enable timer compare interrupt
+  TIMSK1 |= (1 << OCIE1A);
+
+  sei();//allow interrupts
+
+}
+
+ISR(TIMER1_COMPA_vect){
+  UpdateDisplay();
 }
