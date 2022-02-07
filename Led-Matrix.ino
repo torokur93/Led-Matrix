@@ -68,6 +68,7 @@ void loop() {
       }
     }
 
+    DrawRectBorder(0, 0, 16, 26,Color1(1,1,1));
     DrawProgressBar(1,1,14,24,pb_bck,Color1(0,0,0),(float)counter/7200,1);
     
     DrawNumber(14,26,counter,Color1(0,0,1),1);
@@ -78,7 +79,7 @@ void loop() {
   //UpdateSerial();
   
   counter += increment;
-  delay(1000);
+  delay(100);
 }
 
 void InitalizePins(){
@@ -195,14 +196,7 @@ void UpdateDisplay(){
 */
 
 void DrawSquare(char x, char y, char size, Color1 color){
-  for (char row = 0; row < size; row++)
-  {
-    for (char col = 0; col < size; col++)
-    {
-      SetPixel(x+row,y+col,color);
-    }
-    
-  }
+  DrawRect(x, y, size, size, color);
 }
 
 void DrawRect(char x, char y, char height, char width, Color1 color){
@@ -215,6 +209,20 @@ void DrawRect(char x, char y, char height, char width, Color1 color){
     
   }
 }
+
+void DrawRectBorder(char x, char y, char height, char width, Color1 color){
+  for (char row = 0; row < height; row++)
+  {
+    for (char col = 0; col < width; col++)
+    {
+      if(row == 0 || row == height-1 || col == 0 || col == width-1 ){
+        SetPixel(x+row,y+col,color);
+      }
+    }
+    
+  }
+}
+
 
 void DrawCircle(char x, char y, char size, Color1 color){
   DrawCircle(x,y,size,color,Color1(0,0,0));
@@ -303,7 +311,6 @@ void DrawProgressBar(char x, char y,char height, char width, Color1 barColor, Co
     DrawRect(x,y,(char)(height*progress),width,barColor);
     DrawRect(x+(char)(height*progress),y,height-(char)(width*progress),width,bgColor);
   }
-
 }
 
 
