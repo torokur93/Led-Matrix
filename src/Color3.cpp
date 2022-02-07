@@ -2,7 +2,7 @@
 
 Color3::Color3(char r, char g, char b)
 {
-    colorData = (r & R_Mask) | (g & G_Mask) | (b & B_Mask);
+    colorData = ((r << (ColorBits * 2)) & R_Mask) | ((g << ColorBits) & G_Mask) | (b & B_Mask);
 }
 
 Color3::Color3()
@@ -16,17 +16,31 @@ Color3::~Color3()
 
 
 char Color3::GetR(){
-    return colorData & R_Mask;
+    return (colorData & R_Mask) >> (ColorBits * 2);
 }
 
 char Color3::GetG(){
 
-    return colorData & G_Mask;
+    return (colorData & G_Mask) >> ColorBits;
 }
 
 char Color3::GetB(){
 
-    return colorData & B_Mask;
+    return (colorData & B_Mask);
+}
+
+char Color3::GetR(char pwm){
+    return ((colorData & R_Mask) >> (ColorBits * 2)) <= (pwm+1);
+}
+
+char Color3::GetG(char pwm){
+
+    return ((colorData & G_Mask) >> ColorBits) <= (pwm+1);
+}
+
+char Color3::GetB(char pwm){
+
+    return (colorData & B_Mask) <= (pwm+1);
 }
 
 void Color3::SetR(char value){

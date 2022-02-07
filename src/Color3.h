@@ -17,6 +17,9 @@ class Color3
         char GetR();
         char GetG();
         char GetB();
+        char GetR(char pwm);
+        char GetG(char pwm);
+        char GetB(char pwm);
         void SetR(char value);
         void SetG(char value);
         void SetB(char value);
