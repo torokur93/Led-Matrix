@@ -78,6 +78,7 @@ void loop() {
   //UpdateSerial();
   
   counter += increment;
+  delay(1000);
 }
 
 void InitalizePins(){
@@ -271,17 +272,25 @@ void DrawNumber(char x, char y, int number, Color1 color, bool orientation){
   char x_Trans = x;
   char y_Trans = y;
 
+  bool lastLeadingZero = true;
+
   number %= 10000;
 
   for (char digit = 0; digit < 4; digit++)
   {
     if (orientation)
     {
-      x_Trans = x + (digit * 4);
+      x_Trans = x + (digit * -4);
     }else{
       y_Trans = y + (digit * 4);
     }
-    DrawDigit(x_Trans,y_Trans,(number/(int)pow(10,3-digit))%10,Color1(0,0,1),orientation);
+
+    unsigned int currentDigitValue = ((unsigned int)(number/pow(10,3-digit))) % 10;
+
+    if(!(lastLeadingZero && (currentDigitValue == 0))){
+      DrawDigit(x_Trans,y_Trans,currentDigitValue,Color1(0,0,1),orientation);
+      lastLeadingZero = false;
+    }
   }
 }
 
