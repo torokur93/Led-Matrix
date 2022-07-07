@@ -1,4 +1,5 @@
 #include "src/Buffer.h"
+#include "src/Color1.h"
 
 #define ROWS  16
 #define COLS  32
@@ -6,19 +7,30 @@
 
 // Pin definitions
 
-#define LP    10           // Latch Pin
-#define ClkP  8        // Clock Pin
-#define R1P   2         // R1 Pin
-#define B1P   4         // B1 Pin
-#define G1P   3          // G1 Pin
-#define R2P   5          // R2 Pin
-#define B2P   7          // B2 Pin
-#define G2P   6          // G2 Pin
-#define AP    A0           // A Pin
-#define BP    A1           // B Pin
-#define CP    A2           // C Pin
-#define DP    A3           // D Pin
-#define OEP   9         // OE Pin
+#define LP    10       // Latch Pin - PB2
+#define ClkP  8        // Clock Pin - PB0
+
+#define RGBmask 0b11111100
+
+#define R1P   2        // R1 Pin    - PD2
+#define G1P   3        // G1 Pin    - PD3
+#define B1P   4        // B1 Pin    - PD4
+#define R2P   5        // R2 Pin    - PD5
+#define G2P   6        // G2 Pin    - PD6
+#define B2P   7        // B2 Pin    - PD7
+
+#define AP    A0       // A Pin     - PC0
+#define BP    A1       // B Pin     - PC1
+#define CP    A2       // C Pin     - PC2
+#define DP    A3       // D Pin     - PC3
+#define OEP   9        // OE Pin    - PB1
+
+#define MaxPin    A6
+#define ResetPin  A5
+#define CountPin  A4
+
+#define DebugP 11
+#define DebugP2 12
 
 // Constants
 
@@ -38,11 +50,22 @@ const int numbers[10] = {
 // Variable definitions
 
 char currentRow = 0;
+char currentFrame = 1;
+char brightness = 3;
 
-int counter=0;
-char increment = -16;
+// Counter data
 
-Buffer DisplayBuffer(ROWS/4,COLS*2);
+char counter = 0;
+char increment = 1;
+char maximum = 100;
+
+// input pin status
+bool IsCount = false;
+bool IsReset = false;
+bool IsMax = false;
+
+
+Buffer<Color1> DisplayBuffer(ROWS/4,COLS*2);
 
 void setup() {
   
@@ -51,16 +74,46 @@ void setup() {
   
   DisplayBuffer.ClearData();
 
-  Serial.begin(9600);
+  //Serial.begin(9600);
 
 }
 
 void loop() {
 
+    if(!digitalRead(CountPin))
+    {
+      IsCount = true;
+    }else{
+      if(IsCount && (counter + increment <= maximum)){
+        counter += increment;
+        IsCount = false;
+      }
+    }
+    
+    if(!digitalRead(ResetPin))
+    {
+      IsReset = true;
+    }else{
+      if(IsReset){
+        counter = 0;
+        IsReset = false;
+      }
+    }
+/*
+    if((analogRead(MaxPin) >= 500))
+    {
+      IsMax = true;
+    }else{
+      if(IsMax){
+        counter = maximum;
+        IsMax = false;
+      }
+    }*/
+
     Color1 pb_bck(0,1,0);
 
-    if(counter>5000){
-      if (counter>6500)
+    if(counter>80){
+      if (counter>95)
       {
         pb_bck = Color1(1,0,0);
       }else{
@@ -69,17 +122,10 @@ void loop() {
     }
 
     DrawRectBorder(0, 0, 16, 26,Color1(1,1,1));
-    DrawProgressBar(1,1,14,24,pb_bck,Color1(0,0,0),(float)counter/7200,1);
+    DrawProgressBar(1,1,14,24,pb_bck,Color1(0,0,0),(float)counter/maximum,1);
     
     DrawNumber(14,26,counter,Color1(0,0,1),1);
-
-    if(counter == 7200 || counter == 0){
-      increment = -increment;
-    }
-  //UpdateSerial();
   
-  counter += increment;
-  delay(100);
 }
 
 void InitalizePins(){
@@ -98,12 +144,20 @@ void InitalizePins(){
   pinMode(DP,OUTPUT);
   pinMode(OEP,OUTPUT);
   
+  pinMode(DebugP,OUTPUT);
+  pinMode(DebugP2,OUTPUT);
+  
+  pinMode(CountPin,INPUT);
+  pinMode(ResetPin,INPUT);
+  
   digitalWrite(AP, LOW);
   digitalWrite(BP, LOW);
   digitalWrite(CP, LOW);
   digitalWrite(DP, LOW);
   digitalWrite(LP, LOW);
   digitalWrite(OEP, LOW);
+  digitalWrite(DebugP, LOW);
+  digitalWrite(DebugP2, LOW);
 }
 
 void SetPixel(char x, char y,Color1 value){
@@ -137,63 +191,56 @@ void UpdateDisplay(){
   
   for(char col=0;col<DisplayBuffer.Cols;col++){
 
-    ColorDouble CurrentPixel = DisplayBuffer.GetData(currentRow,col);
+    ColorDouble<Color1> CurrentPixel = DisplayBuffer.GetData(currentRow,col);
 
-    // Lower Half
-    digitalWrite(B1P, CurrentPixel.LowerColor.GetB());
-    digitalWrite(G1P, CurrentPixel.LowerColor.GetG());
-    digitalWrite(R1P, CurrentPixel.LowerColor.GetR());
-    // Higher Half
-    digitalWrite(B2P, CurrentPixel.UpperColor.GetB());
-    digitalWrite(G2P, CurrentPixel.UpperColor.GetG());
-    digitalWrite(R2P, CurrentPixel.UpperColor.GetR());
-
+    unsigned char tmp = (PORTD & ~RGBmask);
+    tmp |= (CurrentPixel.LowerColor.GetRGB() | (CurrentPixel.UpperColor.GetRGB() << 3))<<2;
+    PORTD = tmp;
 
     // Shift to register
     digitalWrite(ClkP, HIGH);
     digitalWrite(ClkP, LOW);
   }
   
+  // Disable display
+  digitalWrite(OEP, HIGH);
+  digitalWrite(LP, HIGH);  
+  
+  if(currentRow==0){digitalWrite(AP, LOW);}else{digitalWrite(AP, HIGH);}
+  
+  if(currentRow==1){digitalWrite(BP, LOW);}else{digitalWrite(BP, HIGH);}
+  
+  if(currentRow==2){digitalWrite(CP, LOW);}else{digitalWrite(CP, HIGH);}
+  
+  if(currentRow==3){digitalWrite(DP, LOW);}else{digitalWrite(DP, HIGH);}
+
+  // Enable Display
+  digitalWrite(OEP, LOW);
+  digitalWrite(LP, LOW);  
+
+  if(currentRow<DisplayBuffer.Rows-1){
+    currentRow++;
+  }else{
+    currentRow=0;
+  }
+  
+}
+
+  void DisableDisplay(){
     // Disable display
     digitalWrite(OEP, HIGH);
-    digitalWrite(LP, HIGH);  
-    
-    if(currentRow==0){digitalWrite(AP, LOW);}else{digitalWrite(AP, HIGH);}
-    
-    if(currentRow==1){digitalWrite(BP, LOW);}else{digitalWrite(BP, HIGH);}
-    
-    if(currentRow==2){digitalWrite(CP, LOW);}else{digitalWrite(CP, HIGH);}
-    
-    if(currentRow==3){digitalWrite(DP, LOW);}else{digitalWrite(DP, HIGH);}
+      
+    digitalWrite(AP, HIGH);
+    digitalWrite(BP, HIGH);
+    digitalWrite(CP, HIGH);
+    digitalWrite(DP, HIGH);
   
-    // Enable Display
-    digitalWrite(OEP, LOW);
-    digitalWrite(LP, LOW);  
-
-    if(currentRow<DisplayBuffer.Rows){
+    if(currentRow<DisplayBuffer.Rows-1){
       currentRow++;
     }else{
       currentRow=0;
     }
-  
-}
-
-/*void UpdateSerial(){
-
-  Serial.println("Start");
-  
-  for(char row=0;row<DisplayBuffer.Rows;row++){
-    
-    for(char col=0;col<DisplayBuffer.Cols;col++){
-
-      Serial.print(DisplayBuffer.GetData(row,col));
-      Serial.print(';');
-    }
-
-    Serial.println();
   }
-}
-*/
 
 void DrawSquare(char x, char y, char size, Color1 color){
   DrawRect(x, y, size, size, color);
@@ -295,9 +342,11 @@ void DrawNumber(char x, char y, int number, Color1 color, bool orientation){
 
     unsigned int currentDigitValue = ((unsigned int)(number/pow(10,3-digit))) % 10;
 
-    if(!(lastLeadingZero && (currentDigitValue == 0))){
+    if(!(lastLeadingZero && (currentDigitValue == 0)) || (number == 0 && digit == 3) ){
       DrawDigit(x_Trans,y_Trans,currentDigitValue,Color1(0,0,1),orientation);
       lastLeadingZero = false;
+    }else{
+      DrawRect(x_Trans-2, y_Trans, 3, 5, Color1(0,0,0));
     }
   }
 }
@@ -323,7 +372,8 @@ void SetupInterrupt(){
   TCCR1B = 0;// same for TCCR1B
   TCNT1  = 0;//initialize counter value to 0
   // set compare match register for 1hz increments
-  OCR1A = 40;// = (16*10^6) / (1*1024) - 1 (must be <65536)
+  //OCR1A = 37;// = (16*10^6) / (1*1024) - 1 (must be <65536)
+  OCR1A = 12;// = (16*10^6) / (1*1024) - 1 (must be <65536)
   // turn on CTC mode
   TCCR1B |= (1 << WGM12);
   // Set CS10 and CS12 bits for 1024 prescaler
@@ -336,5 +386,22 @@ void SetupInterrupt(){
 }
 
 ISR(TIMER1_COMPA_vect){
-  UpdateDisplay();
+
+  if(currentFrame % brightness == 0)
+  {
+    UpdateDisplay();
+  }
+  else{
+    DisableDisplay();
+  }
+  
+  if(currentRow == 0)
+  {
+    if(currentFrame<4){
+      currentFrame++;
+    }
+    else{
+      currentFrame = 1;
+    }
+  }
 }

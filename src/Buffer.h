@@ -2,7 +2,10 @@
 #define BUFFER_H
 
 #include "ColorDouble.h"
+#include "Color1.h"
+#include "Color3.h"
 
+template <typename T>
 class Buffer
 {
     private:
@@ -12,25 +15,25 @@ class Buffer
         char Rows;
         char Cols;
         //Array2D data;
-        ColorDouble *data;
+        ColorDouble<T> *data;
 
         Buffer(char rows, char cols);
 
         void ClearData();
 
-        void SetData(ColorDouble value);
+        void SetData(ColorDouble<T> value);
 
-        void SetData(char x, char y, ColorDouble value);
+        void SetData(char x, char y, ColorDouble<T> value);
 
-        ColorDouble GetData(char x, char y);
+        ColorDouble<T> GetData(char x, char y);
 
-        void SetLowerData(char x, char y, Color1 value);
+        void SetLowerData(char x, char y, T value);
 
-        void SetUpperData(char x, char y, Color1 value);
+        void SetUpperData(char x, char y, T value);
 
-        Color1 GetLowerData(char x, char y);
+        T GetLowerData(char x, char y);
 
-        Color1 GetUpperData(char x, char y);
+        T GetUpperData(char x, char y);
 
         void SetBits(char x, char y, char bits);
 

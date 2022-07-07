@@ -1,25 +1,29 @@
 #include "Buffer.h"
 
 // Constructor
-Buffer::Buffer(char rows, char cols)
+template <typename T>
+Buffer<T>::Buffer(char rows, char cols)
 {
     Rows = rows;
     Cols = cols;
     //data = new Array2D(rows, cols);
-    data = new ColorDouble[rows*cols];
+    data = new ColorDouble<T>[rows*cols];
 
     ClearData();
 }
 // Destructor
-Buffer::~Buffer(){
+template <typename T>
+Buffer<T>::~Buffer(){
 
 }
 
-void Buffer::ClearData(){
-    SetData(ColorDouble());
+template <typename T>
+void Buffer<T>::ClearData(){
+    SetData(ColorDouble<T>());
 }
 
-void Buffer::SetData(ColorDouble value){
+template <typename T>
+void Buffer<T>::SetData(ColorDouble<T> value){
     
     for (char row = 0; row < Rows; row++)
     {
@@ -30,49 +34,55 @@ void Buffer::SetData(ColorDouble value){
     }
 }
 
-void Buffer::SetData(char x, char y, ColorDouble value){
+template <typename T>
+void Buffer<T>::SetData(char x, char y, ColorDouble<T> value){
     if(x<=Rows && y<=Cols){
         data[(x * Cols) + y]=value;
     }
 
 }
 
-ColorDouble Buffer::GetData(char x, char y){
+template <typename T>
+ColorDouble<T> Buffer<T>::GetData(char x, char y){
     if(x<=Rows && y<=Cols){
         return data[(x * Cols) + y];
     }
 
-    return ColorDouble();
+    return ColorDouble<T>();
 }
 
-void Buffer::SetLowerData(char x, char y, Color1 value){
+template <typename T>
+void Buffer<T>::SetLowerData(char x, char y, T value){
     if(x<=Rows && y<=Cols){
         data[(x * Cols) + y].LowerColor=value;
     }
 
 }
 
-void Buffer::SetUpperData(char x, char y, Color1 value){
+template <typename T>
+void Buffer<T>::SetUpperData(char x, char y, T value){
     if(x<=Rows && y<=Cols){
         data[(x * Cols) + y].UpperColor=value;
     }
 
 }
 
-Color1 Buffer::GetLowerData(char x, char y){
+template <typename T>
+T Buffer<T>::GetLowerData(char x, char y){
     if(x<=Rows && y<=Cols){
         return data[(x * Cols) + y].LowerColor;
     }
 
-    return Color1();
+    return T();
 }
 
-Color1 Buffer::GetUpperData(char x, char y){
+template <typename T>
+T Buffer<T>::GetUpperData(char x, char y){
     if(x<=Rows && y<=Cols){
         return data[(x * Cols) + y].UpperColor;
     }
 
-    return Color1();
+    return T();
 }
 /*
 void Buffer::SetBits(char x, char y, char bits){
@@ -85,4 +95,6 @@ void Buffer::ToggleBits(char x, char y, char bits){
     data[(x * Cols) + y] ^= bits;
 }*/
 
+template class Buffer<Color1>;
+template class Buffer<Color3>;
 

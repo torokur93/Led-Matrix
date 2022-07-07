@@ -1,16 +1,22 @@
 #include "ColorDouble.h"
 
-ColorDouble::ColorDouble(Color1 upperColor, Color1 lowerColor)
+template <typename T>
+ColorDouble<T>::ColorDouble(T upperColor, T lowerColor)
 {
     UpperColor = upperColor;
     LowerColor = lowerColor;
 }
 
-ColorDouble::ColorDouble()
+template <typename T>
+ColorDouble<T>::ColorDouble()
 {
 }
 
 
-ColorDouble::~ColorDouble()
+template <typename T>
+ColorDouble<T>::~ColorDouble()
 {
 }
+
+template class ColorDouble<Color1>;
+template class ColorDouble<Color3>;
