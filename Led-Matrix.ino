@@ -25,12 +25,10 @@
 #define DP    A3       // D Pin     - PC3
 #define OEP   9        // OE Pin    - PB1
 
-#define MaxPin    A6
+#define MaxPin    A4
 #define ResetPin  A5
-#define CountPin  A4
+#define CountPin  13
 
-#define DebugP 11
-#define DebugP2 12
 
 // Constants
 
@@ -46,6 +44,8 @@ const int numbers[10] = {
   075757,
   075717
 };
+
+const int PercentSign = 041241;
 
 // Variable definitions
 
@@ -64,7 +64,6 @@ bool IsCount = false;
 bool IsReset = false;
 bool IsMax = false;
 
-
 Buffer<Color1> DisplayBuffer(ROWS/4,COLS*2);
 
 void setup() {
@@ -74,7 +73,6 @@ void setup() {
   
   DisplayBuffer.ClearData();
 
-  //Serial.begin(9600);
 
 }
 
@@ -99,8 +97,8 @@ void loop() {
         IsReset = false;
       }
     }
-/*
-    if((analogRead(MaxPin) >= 500))
+    
+    if(!digitalRead(MaxPin))
     {
       IsMax = true;
     }else{
@@ -108,7 +106,7 @@ void loop() {
         counter = maximum;
         IsMax = false;
       }
-    }*/
+    }
 
     Color1 pb_bck(0,1,0);
 
@@ -124,8 +122,9 @@ void loop() {
     DrawRectBorder(0, 0, 16, 26,Color1(1,1,1));
     DrawProgressBar(1,1,14,24,pb_bck,Color1(0,0,0),(float)counter/maximum,1);
     
-    DrawNumber(14,26,counter,Color1(0,0,1),1);
-  
+    DrawNumber(14,26,counter,3,Color1(0,0,1),1);
+    DrawChar(2,26,PercentSign,Color1(0,1,1),1);
+ 
 }
 
 void InitalizePins(){
@@ -144,8 +143,6 @@ void InitalizePins(){
   pinMode(DP,OUTPUT);
   pinMode(OEP,OUTPUT);
   
-  pinMode(DebugP,OUTPUT);
-  pinMode(DebugP2,OUTPUT);
   
   pinMode(CountPin,INPUT);
   pinMode(ResetPin,INPUT);
@@ -156,8 +153,6 @@ void InitalizePins(){
   digitalWrite(DP, LOW);
   digitalWrite(LP, LOW);
   digitalWrite(OEP, LOW);
-  digitalWrite(DebugP, LOW);
-  digitalWrite(DebugP2, LOW);
 }
 
 void SetPixel(char x, char y,Color1 value){
@@ -186,8 +181,7 @@ char TransformY(char x, char y){
 
 }
 
-
-void UpdateDisplay(){
+void UpdateDisplay(bool IsDisabled){
   
   for(char col=0;col<DisplayBuffer.Cols;col++){
 
@@ -198,26 +192,41 @@ void UpdateDisplay(){
     PORTD = tmp;
 
     // Shift to register
-    digitalWrite(ClkP, HIGH);
-    digitalWrite(ClkP, LOW);
+    //digitalWrite(ClkP, HIGH);
+    //digitalWrite(ClkP, LOW);
+
+    // Clock
+    PORTB |= 1;
+    PORTB &= ~1;
+    
   }
-  
+
   // Disable display
   digitalWrite(OEP, HIGH);
   digitalWrite(LP, HIGH);  
-  
-  if(currentRow==0){digitalWrite(AP, LOW);}else{digitalWrite(AP, HIGH);}
-  
-  if(currentRow==1){digitalWrite(BP, LOW);}else{digitalWrite(BP, HIGH);}
-  
-  if(currentRow==2){digitalWrite(CP, LOW);}else{digitalWrite(CP, HIGH);}
-  
-  if(currentRow==3){digitalWrite(DP, LOW);}else{digitalWrite(DP, HIGH);}
 
-  // Enable Display
-  digitalWrite(OEP, LOW);
-  digitalWrite(LP, LOW);  
-
+  if(IsDisabled){
+    digitalWrite(AP, HIGH);
+    digitalWrite(BP, HIGH);
+    digitalWrite(CP, HIGH);
+    digitalWrite(DP, HIGH);
+  }else{
+      
+    if(currentRow==0){digitalWrite(AP, LOW);}else{digitalWrite(AP, HIGH);}
+    
+    if(currentRow==1){digitalWrite(BP, LOW);}else{digitalWrite(BP, HIGH);}
+    
+    if(currentRow==2){digitalWrite(CP, LOW);}else{digitalWrite(CP, HIGH);}
+    
+    if(currentRow==3){digitalWrite(DP, LOW);}else{digitalWrite(DP, HIGH);}
+  
+    // Enable Display
+    digitalWrite(OEP, LOW);
+    
+    digitalWrite(LP, LOW);  
+  }
+  
+  
   if(currentRow<DisplayBuffer.Rows-1){
     currentRow++;
   }else{
@@ -226,21 +235,7 @@ void UpdateDisplay(){
   
 }
 
-  void DisableDisplay(){
-    // Disable display
-    digitalWrite(OEP, HIGH);
-      
-    digitalWrite(AP, HIGH);
-    digitalWrite(BP, HIGH);
-    digitalWrite(CP, HIGH);
-    digitalWrite(DP, HIGH);
   
-    if(currentRow<DisplayBuffer.Rows-1){
-      currentRow++;
-    }else{
-      currentRow=0;
-    }
-  }
 
 void DrawSquare(char x, char y, char size, Color1 color){
   DrawRect(x, y, size, size, color);
@@ -322,16 +317,45 @@ void DrawDigit(char x, char y, char digit, Color1 color, bool orientation){
   }
 }
 
-void DrawNumber(char x, char y, int number, Color1 color, bool orientation){
+void DrawChar(char x, char y, int character, Color1 color, bool orientation){
+
+  char x_Trans =0;
+  char y_Trans =0;
+
+  for (char row = 0; row < 5; row++)
+  {
+    for (char col = 0; col < 3; col++)
+    {
+
+      if(orientation){
+        x_Trans = x-col;
+        y_Trans = y+row;
+      }else{
+        x_Trans = x+row;
+        y_Trans = y+col;
+      }
+
+      if(character>>(((row+1)*3)-1-col)&1){
+        SetPixel(x_Trans,y_Trans,color);
+      }else{
+        SetPixel(x_Trans,y_Trans,Color1(0,0,0));
+      }
+    }
+    
+  }
+}
+
+
+void DrawNumber(char x, char y, int number, char digits, Color1 color, bool orientation){
   
   char x_Trans = x;
   char y_Trans = y;
 
   bool lastLeadingZero = true;
 
-  number %= 10000;
+  number %= (int)pow(10,digits);
 
-  for (char digit = 0; digit < 4; digit++)
+  for (char digit = 0; digit < digits; digit++)
   {
     if (orientation)
     {
@@ -340,9 +364,9 @@ void DrawNumber(char x, char y, int number, Color1 color, bool orientation){
       y_Trans = y + (digit * 4);
     }
 
-    unsigned int currentDigitValue = ((unsigned int)(number/pow(10,3-digit))) % 10;
+    unsigned int currentDigitValue = ((unsigned int)(number/pow(10,(digits-1)-digit))) % 10;
 
-    if(!(lastLeadingZero && (currentDigitValue == 0)) || (number == 0 && digit == 3) ){
+    if(!(lastLeadingZero && (currentDigitValue == 0)) || (number == 0 && digit == (digits-1)) ){
       DrawDigit(x_Trans,y_Trans,currentDigitValue,Color1(0,0,1),orientation);
       lastLeadingZero = false;
     }else{
@@ -372,8 +396,14 @@ void SetupInterrupt(){
   TCCR1B = 0;// same for TCCR1B
   TCNT1  = 0;//initialize counter value to 0
   // set compare match register for 1hz increments
-  //OCR1A = 37;// = (16*10^6) / (1*1024) - 1 (must be <65536)
+
+  //Test value
+  //OCR1A = 12;// = (16*10^6) / (1*1024) - 1 (must be <65536)
+  
+  //Original value:
   OCR1A = 12;// = (16*10^6) / (1*1024) - 1 (must be <65536)
+
+  
   // turn on CTC mode
   TCCR1B |= (1 << WGM12);
   // Set CS10 and CS12 bits for 1024 prescaler
@@ -387,14 +417,8 @@ void SetupInterrupt(){
 
 ISR(TIMER1_COMPA_vect){
 
-  if(currentFrame % brightness == 0)
-  {
-    UpdateDisplay();
-  }
-  else{
-    DisableDisplay();
-  }
-  
+  UpdateDisplay(!(currentFrame % brightness == 0));
+
   if(currentRow == 0)
   {
     if(currentFrame<4){
