@@ -1,4 +1,5 @@
 #include "src/Buffer.h"
+#include "src/Draw.h"
 #include "src/Color1.h"
 
 #define ROWS  16
@@ -64,15 +65,27 @@ bool IsCount = false;
 bool IsReset = false;
 bool IsMax = false;
 
-Buffer<Color1> DisplayBuffer(ROWS/4,COLS*2);
+//Buffer<Color1> DisplayBuffer(ROWS/4,COLS*2);
+
+//Buffer<Color1>* ptrBuffer = &DisplayBuffer;
+
+Draw<Color1> Drawboard(ROWS/4, COLS*2);
 
 void setup() {
   
   InitalizePins();
   SetupInterrupt();
   
-  DisplayBuffer.ClearData();
+  Drawboard.DisplayBuffer->ClearData();
 
+  Drawboard.SetPixel(1,1,Color1(1,1,0));
+  Drawboard.SetPixel(10,8,Color1(0,1,0));
+  Drawboard.SetPixel(6,30,Color1(0,1,1));
+
+  Serial.begin(9600);
+  Serial.println(Drawboard.DisplayBuffer->Cols, DEC);
+  Serial.println(Drawboard.DisplayBuffer->Rows, DEC);
+  Serial.println(Drawboard.GetPixel(1,1).GetRGB(), DEC);
 
 }
 
@@ -119,11 +132,11 @@ void loop() {
       }
     }
 
-    DrawRectBorder(0, 0, 16, 26,Color1(1,1,1));
-    DrawProgressBar(1,1,14,24,pb_bck,Color1(0,0,0),(float)counter/maximum,1);
+    Drawboard.RectBorder(0, 0, 16, 26,Color1(1,1,1));
+    Drawboard.ProgressBar(1,1,14,24,pb_bck,Color1(0,0,0),(float)counter/maximum,1);
     
-    DrawNumber(14,26,counter,3,Color1(0,0,1),1);
-    DrawChar(2,26,PercentSign,Color1(0,1,1),1);
+    Drawboard.Number(14,26,counter,3,Color1(0,0,1),1);
+    Drawboard.Char(2,26,PercentSign,Color1(0,1,1),1);
  
 }
 
@@ -154,7 +167,7 @@ void InitalizePins(){
   digitalWrite(LP, LOW);
   digitalWrite(OEP, LOW);
 }
-
+/*
 void SetPixel(char x, char y,Color1 value){
 
   char BufferX = (x & B011);
@@ -179,13 +192,13 @@ char TransformY(char x, char y){
     return (COLS*2) - 16 -SegmentID * 16 + BitID;
   }
 
-}
+}*/
 
 void UpdateDisplay(bool IsDisabled){
   
-  for(char col=0;col<DisplayBuffer.Cols;col++){
+  for(char col=0;col<Drawboard.Cols;col++){
 
-    ColorDouble<Color1> CurrentPixel = DisplayBuffer.GetData(currentRow,col);
+    ColorDouble<Color1> CurrentPixel = Drawboard.DisplayBuffer->GetData(currentRow,col);
 
     unsigned char tmp = (PORTD & ~RGBmask);
     tmp |= (CurrentPixel.LowerColor.GetRGB() | (CurrentPixel.UpperColor.GetRGB() << 3))<<2;
@@ -227,7 +240,7 @@ void UpdateDisplay(bool IsDisabled){
   }
   
   
-  if(currentRow<DisplayBuffer.Rows-1){
+  if(currentRow<Drawboard.Rows-1){
     currentRow++;
   }else{
     currentRow=0;
@@ -236,7 +249,7 @@ void UpdateDisplay(bool IsDisabled){
 }
 
   
-
+/*
 void DrawSquare(char x, char y, char size, Color1 color){
   DrawRect(x, y, size, size, color);
 }
@@ -385,7 +398,7 @@ void DrawProgressBar(char x, char y,char height, char width, Color1 barColor, Co
     DrawRect(x+(char)(height*progress),y,height-(char)(width*progress),width,bgColor);
   }
 }
-
+*/
 
 // intterrupts
 void SetupInterrupt(){

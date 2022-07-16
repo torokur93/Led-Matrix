@@ -3,5 +3,5 @@
     "board": "arduino:avr:nano",
     "programmer": "arduino:arduinoisp",
     "sketch": "Led-Matrix.ino",
-    "port": "COM4"
+    "port": "COM5"
 }
