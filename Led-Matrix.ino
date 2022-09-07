@@ -137,8 +137,15 @@ void SetPixel(char x, char y,Color1 value){
 
 char TransformY(char x, char y){
   char SegmentID = y / 8;
-  char BitID = y % 8;
+  char BitID = 0;
 
+  if (IsMatrix)
+  {
+    BitID = 7 - (y % 8);
+  }else{
+    BitID = y % 8;
+  }
+  
   if(x){
     return (COLS*2) - 1 - y - SegmentID * 8;
   }else{
