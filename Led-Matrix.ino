@@ -56,7 +56,7 @@ char brightness = 3;
 
 // Counter data
 
-char counter = 66;
+char counter = 67;
 char increment = 1;
 char maximum = 100;
 
@@ -222,9 +222,9 @@ void UpdateDisplay(bool IsDisabled){
 
     if(IsMatrix){
 
-      if(currentRow % 2 == 1){digitalWrite(AP, LOW);}else{digitalWrite(AP, HIGH);}
+      if((3-currentRow) % 2 == 1){digitalWrite(AP, LOW);}else{digitalWrite(AP, HIGH);}
       
-      if(((currentRow >> 1) % 2) == 1 ){digitalWrite(BP, LOW);}else{digitalWrite(BP, HIGH);}
+      if((((3-currentRow) >> 1) % 2) == 1 ){digitalWrite(BP, LOW);}else{digitalWrite(BP, HIGH);}
 
 
     }else{
