@@ -29,7 +29,7 @@
 #define ResetPin  A5
 #define CountPin  13
 
-
+#define IsMatrix true
 // Constants
 
 const int numbers[10] = {
@@ -185,14 +185,25 @@ void UpdateDisplay(bool IsDisabled){
     digitalWrite(DP, HIGH);
   }else{
       
-    if(currentRow==0){digitalWrite(AP, LOW);}else{digitalWrite(AP, HIGH);}
+    if(IsMatrix){
+
+      if(currentRow % 2 == 1){digitalWrite(AP, LOW);}else{digitalWrite(AP, HIGH);}
+      
+      if(((currentRow >> 1) % 2) == 1 ){digitalWrite(BP, LOW);}else{digitalWrite(BP, HIGH);}
+
+
+    }else{
+      
+
+      if(currentRow==0){digitalWrite(AP, LOW);}else{digitalWrite(AP, HIGH);}
+      
+      if(currentRow==1){digitalWrite(BP, LOW);}else{digitalWrite(BP, HIGH);}
+      
+      if(currentRow==2){digitalWrite(CP, LOW);}else{digitalWrite(CP, HIGH);}
+      
+      if(currentRow==3){digitalWrite(DP, LOW);}else{digitalWrite(DP, HIGH);}
     
-    if(currentRow==1){digitalWrite(BP, LOW);}else{digitalWrite(BP, HIGH);}
-    
-    if(currentRow==2){digitalWrite(CP, LOW);}else{digitalWrite(CP, HIGH);}
-    
-    if(currentRow==3){digitalWrite(DP, LOW);}else{digitalWrite(DP, HIGH);}
-  
+    }
     // Enable Display
     digitalWrite(OEP, LOW);
     
