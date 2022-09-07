@@ -29,6 +29,7 @@
 #define ResetPin  A5
 #define CountPin  13
 
+#define IsMatrix true
 
 // Constants
 
@@ -55,7 +56,7 @@ char brightness = 3;
 
 // Counter data
 
-char counter = 0;
+char counter = 66;
 char increment = 1;
 char maximum = 100;
 
@@ -171,7 +172,14 @@ void SetPixel(char x, char y,Color1 value){
 
 char TransformY(char x, char y){
   char SegmentID = y / 8;
-  char BitID = y % 8;
+  char BitID = 0;
+
+  if(IsMatrix)
+  {
+    BitID = 7 - (y % 8);
+  }else{
+    BitID = y % 8;
+  }
 
   if(x){
     return (COLS*2) - 1 - y - SegmentID * 8;
@@ -211,15 +219,26 @@ void UpdateDisplay(bool IsDisabled){
     digitalWrite(CP, HIGH);
     digitalWrite(DP, HIGH);
   }else{
+
+    if(IsMatrix){
+
+      if(currentRow % 2 == 1){digitalWrite(AP, LOW);}else{digitalWrite(AP, HIGH);}
       
-    if(currentRow==0){digitalWrite(AP, LOW);}else{digitalWrite(AP, HIGH);}
+      if(((currentRow >> 1) % 2) == 1 ){digitalWrite(BP, LOW);}else{digitalWrite(BP, HIGH);}
+
+
+    }else{
+      
+
+      if(currentRow==0){digitalWrite(AP, LOW);}else{digitalWrite(AP, HIGH);}
+      
+      if(currentRow==1){digitalWrite(BP, LOW);}else{digitalWrite(BP, HIGH);}
+      
+      if(currentRow==2){digitalWrite(CP, LOW);}else{digitalWrite(CP, HIGH);}
+      
+      if(currentRow==3){digitalWrite(DP, LOW);}else{digitalWrite(DP, HIGH);}
     
-    if(currentRow==1){digitalWrite(BP, LOW);}else{digitalWrite(BP, HIGH);}
-    
-    if(currentRow==2){digitalWrite(CP, LOW);}else{digitalWrite(CP, HIGH);}
-    
-    if(currentRow==3){digitalWrite(DP, LOW);}else{digitalWrite(DP, HIGH);}
-  
+    }
     // Enable Display
     digitalWrite(OEP, LOW);
     
