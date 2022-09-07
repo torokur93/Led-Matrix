@@ -69,7 +69,7 @@ Buffer<Color1> DisplayBuffer(ROWS/4,COLS*2);
 void setup() {
   
   InitalizePins();
-  SetupInterrupt();
+  //SetupInterrupt();
   
   DisplayBuffer.ClearData();
 
@@ -78,53 +78,19 @@ void setup() {
 
 void loop() {
 
-    if(!digitalRead(CountPin))
-    {
-      IsCount = true;
+  if(counter == 64){
+    counter = 0;
+    if(currentRow<DisplayBuffer.Rows-1){
+      currentRow++;
     }else{
-      if(IsCount && (counter + increment <= maximum)){
-        counter += increment;
-        IsCount = false;
-      }
+      currentRow=0;
     }
-    
-    if(!digitalRead(ResetPin))
-    {
-      IsReset = true;
-    }else{
-      if(IsReset){
-        counter = 0;
-        IsReset = false;
-      }
-    }
-    
-    if(!digitalRead(MaxPin))
-    {
-      IsMax = true;
-    }else{
-      if(IsMax){
-        counter = maximum;
-        IsMax = false;
-      }
-    }
+  
+  }
 
-    Color1 pb_bck(0,1,0);
-
-    if(counter>80){
-      if (counter>95)
-      {
-        pb_bck = Color1(1,0,0);
-      }else{
-        pb_bck = Color1(1,1,0);
-      }
-    }
-
-    DrawRectBorder(0, 0, 16, 26,Color1(1,1,1));
-    DrawProgressBar(1,1,14,24,pb_bck,Color1(0,0,0),(float)counter/maximum,1);
-    
-    DrawNumber(14,26,counter,3,Color1(0,0,1),1);
-    DrawChar(2,26,PercentSign,Color1(0,1,1),1);
- 
+  UpdateDisplay(false);
+  counter++;
+  delay(200);
 }
 
 void InitalizePins(){
@@ -185,10 +151,16 @@ void UpdateDisplay(bool IsDisabled){
   
   for(char col=0;col<DisplayBuffer.Cols;col++){
 
-    ColorDouble<Color1> CurrentPixel = DisplayBuffer.GetData(currentRow,col);
+    //ColorDouble<Color1> CurrentPixel = DisplayBuffer.GetData(currentRow,col);
+
+    Color1 asd = Color1(0,0,0);
+
+    if(counter >= col){
+      asd = Color1(1,0,0);
+    }
 
     unsigned char tmp = (PORTD & ~RGBmask);
-    tmp |= (CurrentPixel.LowerColor.GetRGB() | (CurrentPixel.UpperColor.GetRGB() << 3))<<2;
+    tmp |= (asd.GetRGB() | (asd.GetRGB() << 3))<<2;
     PORTD = tmp;
 
     // Shift to register
@@ -198,7 +170,8 @@ void UpdateDisplay(bool IsDisabled){
     // Clock
     PORTB |= 1;
     PORTB &= ~1;
-    
+
+  
   }
 
   // Disable display
@@ -224,13 +197,6 @@ void UpdateDisplay(bool IsDisabled){
     digitalWrite(OEP, LOW);
     
     digitalWrite(LP, LOW);  
-  }
-  
-  
-  if(currentRow<DisplayBuffer.Rows-1){
-    currentRow++;
-  }else{
-    currentRow=0;
   }
   
 }
