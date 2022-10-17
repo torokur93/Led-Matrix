@@ -56,7 +56,7 @@ char brightness = 3;
 
 // Counter data
 
-char counter = 67;
+char counter = 0;
 char increment = 1;
 char maximum = 100;
 
