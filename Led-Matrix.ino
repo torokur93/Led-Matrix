@@ -65,6 +65,13 @@ bool IsCount = false;
 bool IsReset = false;
 bool IsMax = false;
 
+// input pin debounce
+unsigned long debounceDelay = 500;
+
+unsigned long CountLast;
+unsigned long ResetLast;
+unsigned long MaxLast;
+
 Buffer<Color1> DisplayBuffer(ROWS/4,COLS*2);
 
 void setup() {
@@ -82,30 +89,42 @@ void loop() {
     if(!digitalRead(CountPin))
     {
       IsCount = true;
+      CountLast = millis();
     }else{
       if(IsCount && (counter + increment <= maximum)){
-        counter += increment;
-        IsCount = false;
+        if(CountLast + millis() >= debounceDelay)
+        {
+          counter += increment;
+          IsCount = false;
+        }
       }
     }
     
     if(!digitalRead(ResetPin))
     {
       IsReset = true;
+      ResetLast = millis();
     }else{
       if(IsReset){
-        counter = 0;
-        IsReset = false;
+        if(ResetLast + millis() >= debounceDelay)
+        {
+          counter = 0;
+          IsReset = false;
+        }
       }
     }
     
     if(!digitalRead(MaxPin))
     {
       IsMax = true;
+      MaxLast = millis();
     }else{
       if(IsMax){
-        counter = maximum;
-        IsMax = false;
+        if(MaxLast + millis() >= debounceDelay)
+        {
+          counter = maximum;
+          IsMax = false;
+        }
       }
     }
 
