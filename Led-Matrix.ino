@@ -61,9 +61,19 @@ char increment = 1;
 char maximum = 100;
 
 // input pin status
-bool IsCount = false;
-bool IsReset = false;
-bool IsMax = false;
+bool CountPinDebounceWait = false;
+bool ResetPinDebounceWait = false;
+bool MaxPinDebounceWait = false;
+bool CountPinLastState = LOW;
+bool ResetPinLastState = LOW;
+bool MaxPinLastState = LOW;
+
+// input pin debounce
+unsigned long debounceDelay = 500;
+
+unsigned long CountPinDebounceStartTime;
+unsigned long ResetPinDebounceStartTime;
+unsigned long MaxPinDebounceStartTime;
 
 Buffer<Color1> DisplayBuffer(ROWS/4,COLS*2);
 
@@ -79,52 +89,33 @@ void setup() {
 
 void loop() {
 
-    if(!digitalRead(CountPin))
-    {
-      IsCount = true;
-    }else{
-      if(IsCount && (counter + increment <= maximum)){
-        counter += increment;
-        IsCount = false;
-      }
-    }
-    
-    if(!digitalRead(ResetPin))
-    {
-      IsReset = true;
-    }else{
-      if(IsReset){
-        counter = 0;
-        IsReset = false;
-      }
-    }
-    
-    if(!digitalRead(MaxPin))
-    {
-      IsMax = true;
-    }else{
-      if(IsMax){
-        counter = maximum;
-        IsMax = false;
-      }
-    }
+  ReadCountPin();
+  ReadResetPin();
+  ReadMaxPin();
 
-    Color1 pb_bck(0,1,0);
+  Color1 pb_bck(0,1,0);
 
-    if(counter>80){
-      if (counter>95)
-      {
-        pb_bck = Color1(1,0,0);
-      }else{
-        pb_bck = Color1(1,1,0);
-      }
+  if(counter>80){
+    if (counter>95)
+    {
+      pb_bck = Color1(1,0,0);
+    }else{
+      pb_bck = Color1(1,1,0);
     }
+  }
 
-    DrawRectBorder(0, 0, 16, 26,Color1(1,1,1));
-    DrawProgressBar(1,1,14,24,pb_bck,Color1(0,0,0),(float)counter/maximum,1);
-    
+  DrawRectBorder(0, 0, 16, 26,Color1(1,1,1));
+  DrawProgressBar(1,1,14,24,pb_bck,Color1(0,0,0),(float)counter/maximum,1);
+  
+  if(CountPinDebounceWait){
+
     DrawNumber(14,26,counter,3,Color1(0,0,1),1);
-    DrawChar(2,26,PercentSign,Color1(0,1,1),1);
+  }else{
+    DrawNumber(14,26,counter,3,Color1(1,1,0),1);
+
+  }
+
+  DrawChar(2,26,PercentSign,Color1(0,1,1),1);
  
 }
 
@@ -155,6 +146,87 @@ void InitalizePins(){
   digitalWrite(LP, LOW);
   digitalWrite(OEP, LOW);
 }
+
+void ReadCountPin(){
+  
+  bool CountPinState = digitalRead(CountPin);
+
+  if (!CountPinDebounceWait && CountPinLastState == HIGH && CountPinState == LOW) {
+    CountPinDebounceStartTime = millis();
+    CountPinDebounceWait = true;
+  }
+
+  if(CountPinDebounceWait){
+    
+
+    if((millis() - CountPinDebounceStartTime) > debounceDelay) {
+      if(counter + increment <= maximum && CountPinState == LOW)
+      {
+        counter += increment;
+      }
+
+      CountPinDebounceWait = false;
+
+    }
+  }
+  
+  CountPinLastState = CountPinState;
+}
+
+
+void ReadResetPin(){
+  
+  bool ResetPinState = digitalRead(ResetPin);
+
+  if (!ResetPinDebounceWait && ResetPinLastState == HIGH && ResetPinState == LOW) {
+    ResetPinDebounceStartTime = millis();
+    ResetPinDebounceWait = true;
+  }
+
+  if(ResetPinDebounceWait){
+    
+
+    if((millis() - ResetPinDebounceStartTime) > debounceDelay) {
+      if(ResetPinState == LOW)
+      {
+        counter = 0;
+      }
+
+      ResetPinDebounceWait = false;
+
+    }
+  }
+  
+  ResetPinLastState = ResetPinState;
+}
+
+void ReadMaxPin(){
+  
+  bool MaxPinState = digitalRead(MaxPin);
+
+  if (!MaxPinDebounceWait && MaxPinLastState == HIGH && MaxPinState == LOW) {
+    MaxPinDebounceStartTime = millis();
+    MaxPinDebounceWait = true;
+  }
+
+  if(MaxPinDebounceWait){
+    
+
+    if((millis() - MaxPinDebounceStartTime) > debounceDelay) {
+      if(MaxPinState == LOW)
+      {
+        counter = maximum;
+      }
+
+      MaxPinDebounceWait = false;
+
+    }
+  }
+  
+  MaxPinLastState = MaxPinState;
+}
+
+
 
 void SetPixel(char x, char y,Color1 value){
 
